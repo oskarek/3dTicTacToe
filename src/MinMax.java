@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 /**
@@ -90,6 +91,36 @@ class MinMax {
     return numberOfCellsInDiagonalsForPlayer(state, me);
   }
 
+  // TODO: more equivalence states maybe?
+  private ArrayList<String> equivalentStateStrings(GameState state) {
+    ArrayList<String> states = new ArrayList<>();
+    for (int i = 0; i < GameState.BOARD_SIZE; i++) {
+      StringBuilder sb1 = new StringBuilder();
+      StringBuilder sb2 = new StringBuilder();
+      StringBuilder sb3 = new StringBuilder();
+      StringBuilder sb4 = new StringBuilder();
+      StringBuilder sb5 = new StringBuilder();
+      StringBuilder sb6 = new StringBuilder();
+      for (int j = 0; j < GameState.BOARD_SIZE; j++) {
+        for (int k = 0; k < GameState.BOARD_SIZE; k++) {
+          sb1.append(Constants.MESSAGE_SYMBOLS[state.at(i,j,k)]);
+          sb2.append(Constants.MESSAGE_SYMBOLS[state.at(i,k,j)]);
+          sb3.append(Constants.MESSAGE_SYMBOLS[state.at(j,i,k)]);
+          sb4.append(Constants.MESSAGE_SYMBOLS[state.at(j,k,i)]);
+          sb5.append(Constants.MESSAGE_SYMBOLS[state.at(k,i,j)]);
+          sb6.append(Constants.MESSAGE_SYMBOLS[state.at(k,j,i)]);
+        }
+      }
+      states.add(sb1.toString());
+      states.add(sb2.toString());
+      states.add(sb3.toString());
+      states.add(sb4.toString());
+      states.add(sb5.toString());
+      states.add(sb6.toString());
+    }
+    return states;
+  }
+
   private String stateString(GameState state) {
     StringBuilder ss = new StringBuilder();
     for (int i = 0; i < GameState.CELL_COUNT; i++)
@@ -98,11 +129,13 @@ class MinMax {
   }
 
   private int maxsearch(GameState state, int depth, int alpha, int beta) {
-    String stateStr = stateString(state);
-    Integer cacheVal = stateCache.get(stateStr);
-    if (cacheVal != null) {
-      bestNextState = bestNextStateCache.get(stateStr);
-      return cacheVal;
+    Integer cacheVal;
+    for (String s : equivalentStateStrings(state)) {
+      cacheVal = stateCache.get(s);
+      if (cacheVal != null) {
+        bestNextState = bestNextStateCache.get(s);
+        return cacheVal;
+      }
     }
 
     if (depth >= maxDepth || state.isEOG())
@@ -123,7 +156,7 @@ class MinMax {
         break;
     }
 
-    stateStr = stateString(state);
+    String stateStr = stateString(state);
     stateCache.put(stateStr, alpha);
     bestNextStateCache.put(stateStr, maxState);
     bestNextState = maxState;
