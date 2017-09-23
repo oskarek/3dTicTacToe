@@ -30,16 +30,46 @@ class MinMax {
   }
 
   // TODO: Right now, only first horizontal layer
-  private int numberOfCellsInDiagnonalsForPlayer(GameState state, int player) {
+  private int numberOfCellsInDiagonalsForPlayer(GameState state, int player) {
     int sum = 0;
     int inset = 0;
-    for (int i = 0; i < GameState.BOARD_SIZE; i++) {
-      if (state.at(i,inset,0) == player)
+
+    for (int l = 0;l < GameState.BOARD_SIZE; l++) {
+
+      //Superdiagonals
+      if(state.at(l,l,l) == player) {
         sum++;
-      if (state.at(i,GameState.BOARD_SIZE-1-inset,0) == player)
+      }
+      if(state.at(l,GameState.BOARD_SIZE - 1 - l,l) == player) {
         sum++;
-      inset++;
+      }
+      if(state.at(GameState.BOARD_SIZE - 1 - l,l,l) == player){
+        sum++;
+      }
+      if(state.at(GameState.BOARD_SIZE - 1 - l, GameState.BOARD_SIZE - 1 - l, l) == player) {
+        sum++;
+      }
+
+
+      for (int i = 0; i < GameState.BOARD_SIZE; i++) {
+
+        //Straight ahead diagonals
+        if (state.at(i, inset, l) == player)
+          sum++;
+        if (state.at(i, GameState.BOARD_SIZE - 1 - inset, l) == player)
+          sum++;
+
+        //Ontop diagonals
+        if (state.at(l, inset, i) == player)
+          sum++;
+        if (state.at(l, GameState.BOARD_SIZE - 1 - inset, i) == player)
+          sum++;
+
+        inset++;
+      }
+      inset = 0;
     }
+
     return sum;
   }
 
@@ -54,7 +84,7 @@ class MinMax {
   }
 
   private int eval(GameState state) {
-    return numberOfCellsInDiagnonalsForPlayer(state, me);
+    return numberOfCellsInDiagonalsForPlayer(state, me);
   }
 
   private String stateString(GameState state) {
