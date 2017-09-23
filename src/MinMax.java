@@ -6,13 +6,16 @@ import java.util.Vector;
 class MinMax {
   private GameState bestNextState;
   private int me;
-  private static final int maxDepth = 9;
+  private static final int maxDepth = 5;
 
-  private HashMap<String, Integer> stateCache = new HashMap<>();
+  private HashMap<String, Integer> stateCache;
+  private HashMap<String, GameState> bestNextStateCache;
 
-  MinMax(GameState gameState) {
+  MinMax(GameState gameState, HashMap<String, Integer> stateCache, HashMap<String, GameState> bestNextStateCache) {
     bestNextState = gameState;
     me = gameState.getNextPlayer();
+    this.stateCache = stateCache;
+    this.bestNextStateCache = bestNextStateCache;
   }
 
   GameState getBestNextState() {
@@ -95,8 +98,10 @@ class MinMax {
   }
 
   private int maxsearch(GameState state, int depth, int alpha, int beta) {
-    Integer cacheVal = stateCache.get(stateString(state));
+    String stateStr = stateString(state);
+    Integer cacheVal = stateCache.get(stateStr);
     if (cacheVal != null) {
+      bestNextState = bestNextStateCache.get(stateStr);
       return cacheVal;
     }
 
@@ -118,7 +123,9 @@ class MinMax {
         break;
     }
 
-    stateCache.put(stateString(state), alpha);
+    stateStr = stateString(state);
+    stateCache.put(stateStr, alpha);
+    bestNextStateCache.put(stateStr, maxState);
     bestNextState = maxState;
 
     return alpha;
@@ -126,8 +133,9 @@ class MinMax {
 
   private int minsearch(GameState state, int depth, int alpha, int beta) {
     Integer cacheVal = stateCache.get(stateString(state));
-    if (cacheVal != null)
+    if (cacheVal != null) {
       return cacheVal;
+    }
 
     if (depth >= maxDepth || state.isEOG())
       return utilityForState(state);
@@ -135,15 +143,23 @@ class MinMax {
     Vector<GameState> nextStates = new Vector<>();
     state.findPossibleMoves(nextStates);
 
+    GameState minState = state;
+
     for (GameState nextState : nextStates) {
       int v = maxsearch(nextState, depth+1, alpha, beta);
       beta = Math.min(beta,v);
+      if (v < beta) {
+        beta = v;
+        minState = nextState;
+      }
       beta = Math.min(beta,v);
       if (v <= alpha)
         break;
     }
 
-    stateCache.put(stateString(state), beta);
+    String stateStr = stateString(state);
+    stateCache.put(stateStr, alpha);
+    bestNextStateCache.put(stateStr, minState);
 
     return beta;
   }
