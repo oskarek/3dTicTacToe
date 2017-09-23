@@ -164,6 +164,7 @@ class MinMax {
     return alpha;
   }
 
+  // TODO: use equivalent states
   private int minsearch(GameState state, int depth, int alpha, int beta) {
     Integer cacheVal = stateCache.get(stateString(state));
     if (cacheVal != null) {
