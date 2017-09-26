@@ -94,7 +94,32 @@ class MinMax {
   // TODO: more equivalence states maybe?
   private ArrayList<String> equivalentStateStrings(GameState state) {
     ArrayList<String> states = new ArrayList<>();
-    for (int i = 0; i < GameState.BOARD_SIZE; i++) {
+
+    StringBuilder turnCubeLeft = new StringBuilder();
+    StringBuilder turnCubeRight = new StringBuilder();
+    StringBuilder turnCube180Degrees = new StringBuilder();
+    StringBuilder turnCubeUp = new StringBuilder();
+    StringBuilder turnCubeDown = new StringBuilder();
+    StringBuilder turnCubeUp180Degrees = new StringBuilder();
+    for(int row = 0; row < GameState.BOARD_SIZE; row++) {
+      for (int column = 0; column < GameState.BOARD_SIZE; column++) {
+        for (int layer = 0; layer < GameState.BOARD_SIZE; layer++) {
+            turnCubeLeft.append(Constants.MESSAGE_SYMBOLS[state.at(row,GameState.BOARD_SIZE - 1 - layer,column)]);
+            turnCubeRight.append(Constants.MESSAGE_SYMBOLS[state.at(row,layer,GameState.BOARD_SIZE - 1 - column)]);
+            turnCube180Degrees.append(Constants.MESSAGE_SYMBOLS[state.at(row,GameState.BOARD_SIZE-1-column,GameState.BOARD_SIZE-1-layer)]);
+            turnCubeUp.append(Constants.MESSAGE_SYMBOLS[state.at(GameState.BOARD_SIZE-1-layer,column,row)]);
+            turnCubeDown.append(Constants.MESSAGE_SYMBOLS[state.at(layer,column,GameState.BOARD_SIZE-1-row)]);
+            turnCubeUp180Degrees.append(Constants.MESSAGE_SYMBOLS[state.at(GameState.BOARD_SIZE-1-row,column,GameState.BOARD_SIZE-1-layer)]);
+        }
+      }
+    }
+    states.add(turnCubeLeft.toString());
+    states.add(turnCubeRight.toString());
+    states.add(turnCube180Degrees.toString());
+    states.add(turnCubeUp.toString());
+    states.add(turnCubeDown.toString());
+    states.add(turnCubeUp180Degrees.toString());
+/*    for (int i = 0; i < GameState.BOARD_SIZE; i++) {
       StringBuilder sb1 = new StringBuilder();
       StringBuilder sb2 = new StringBuilder();
       StringBuilder sb3 = new StringBuilder();
@@ -117,7 +142,7 @@ class MinMax {
       states.add(sb4.toString());
       states.add(sb5.toString());
       states.add(sb6.toString());
-    }
+    }*/
     return states;
   }
 
@@ -167,8 +192,12 @@ class MinMax {
   // TODO: use equivalent states
   private int minsearch(GameState state, int depth, int alpha, int beta) {
     Integer cacheVal = stateCache.get(stateString(state));
-    if (cacheVal != null) {
-      return cacheVal;
+    for (String s : equivalentStateStrings(state)) {
+      cacheVal = stateCache.get(s);
+      if (cacheVal != null) {
+        bestNextState = bestNextStateCache.get(s);
+        return cacheVal;
+      }
     }
 
     if (depth >= maxDepth || state.isEOG())
