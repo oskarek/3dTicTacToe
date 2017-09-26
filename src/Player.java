@@ -1,8 +1,6 @@
 import java.util.*;
 
 public class Player {
-    private HashMap<String, Integer> stateCache = new HashMap<>();
-    private HashMap<String, GameState> bestNextStateCache = new HashMap<>();
     /**
      * Performs a move
      *
@@ -21,11 +19,7 @@ public class Player {
             return new GameState(gameState, new Move());
         }
 
-        /*
-         * Here you should write your algorithms to get the best next move, i.e.
-         * the best next state. This skeleton returns a random move instead.
-         */
-        MinMax mm = new MinMax(gameState, stateCache, bestNextStateCache);
+        MinMax mm = new MinMax(gameState);
         return mm.getBestNextState();
     }
 }
