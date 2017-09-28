@@ -11,6 +11,7 @@ class MinMax {
 
   // State string -> depth -> ordered next states
   private HashMap<String, HashMap<Integer, Vector<GameState>>> orderedNextStates = new HashMap<>();
+  private HashMap<String, Integer> stateEvals = new HashMap<>();
 
   MinMax(GameState gameState) {
     state = gameState;
@@ -44,30 +45,6 @@ class MinMax {
     states.add(turnCubeUp.toString());
     states.add(turnCubeDown.toString());
     states.add(turnCubeUp180Degrees.toString());
-/*    for (int i = 0; i < GameState.BOARD_SIZE; i++) {
-      StringBuilder sb1 = new StringBuilder();
-      StringBuilder sb2 = new StringBuilder();
-      StringBuilder sb3 = new StringBuilder();
-      StringBuilder sb4 = new StringBuilder();
-      StringBuilder sb5 = new StringBuilder();
-      StringBuilder sb6 = new StringBuilder();
-      for (int j = 0; j < GameState.BOARD_SIZE; j++) {
-        for (int k = 0; k < GameState.BOARD_SIZE; k++) {
-          sb1.append(Constants.MESSAGE_SYMBOLS[state.at(i,j,k)]);
-          sb2.append(Constants.MESSAGE_SYMBOLS[state.at(i,k,j)]);
-          sb3.append(Constants.MESSAGE_SYMBOLS[state.at(j,i,k)]);
-          sb4.append(Constants.MESSAGE_SYMBOLS[state.at(j,k,i)]);
-          sb5.append(Constants.MESSAGE_SYMBOLS[state.at(k,i,j)]);
-          sb6.append(Constants.MESSAGE_SYMBOLS[state.at(k,j,i)]);
-        }
-      }
-      states.add(sb1.toString());
-      states.add(sb2.toString());
-      states.add(sb3.toString());
-      states.add(sb4.toString());
-      states.add(sb5.toString());
-      states.add(sb6.toString());
-    }*/
     return states;
   }
 
@@ -83,24 +60,22 @@ class MinMax {
     state.findPossibleMoves(nextStates);
 
     // get the state that maximizes the minimax search value
-    int maxval = Integer.MIN_VALUE;
+    int alpha = Integer.MIN_VALUE;
     GameState maxState = state;
     for (GameState s : nextStates) {
-      int v = IDS(s);
-      if (v > maxval) {
-        maxval = v;
+      int v = IDS(s, alpha);
+      if (v >= alpha) {
+        alpha = v;
         maxState = s;
       }
     }
-//    System.err.println("MAXVAL: " + maxval);
-//    System.err.println("STATE: " + maxState.toMessage());
     return maxState;
   }
 
-  private int IDS(GameState state) {
+  private int IDS(GameState state, int alpha) {
     int score = 0;
-    for (int depth = 1; depth < 6; depth++)
-      score = search(state, 0, depth, Integer.MIN_VALUE, Integer.MAX_VALUE);
+    for (int depth = 0; depth < 1; depth++)
+      score = search(state, 0, depth, alpha, Integer.MAX_VALUE);
     return score;
   }
 
@@ -111,8 +86,20 @@ class MinMax {
   }
 
   private int search(GameState state, int depth, int maxDepth, int alpha, int beta) {
-    if (depth >= maxDepth || state.isEOG())
-      return Evaluator.utilityForState(state, me);
+    if (depth >= maxDepth || state.isEOG()) {
+      String stateStr = stateString(state);
+
+      // first try to find an already calculated value
+      Integer v = stateEvals.get(stateStr);
+
+      // if one can't be found, calculate a new and save it
+      if (v == null)
+        v = Evaluator.utilityForState(state, me);
+      stateEvals.put(stateStr, v);
+      for (String s : equivalentStateStrings(state))
+        stateEvals.put(s, v);
+      return v;
+    }
 
     HashMap<Integer, Vector<GameState>> tmp = orderedNextStates.get(stateString(state));
     Vector<GameState> nextStates = null;
@@ -134,8 +121,9 @@ class MinMax {
         int v = search(nextState, depth+1, maxDepth, alpha, beta);
         states.put(v, nextState);
         alpha = Math.max(alpha, v);
-        if (v >= beta)
+        if (v >= beta) {
           break;
+        }
       }
       score = alpha;
     } else { // minsearch
@@ -143,8 +131,9 @@ class MinMax {
         int v = search(nextState, depth+1, maxDepth, alpha, beta);
         states.put(v, nextState);
         beta = Math.min(beta, v);
-        if (v <= alpha)
+        if (v <= alpha) {
           break;
+        }
       }
       score = beta;
     }

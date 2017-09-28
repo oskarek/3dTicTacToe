@@ -7,17 +7,14 @@ class Evaluator {
         int[] horiz_row = new int[GameState.BOARD_SIZE];
         int[] horiz_col = new int[GameState.BOARD_SIZE];
         int[] vert_row = new int[GameState.BOARD_SIZE];
-        int[] vert_col = new int[GameState.BOARD_SIZE];
         for (int k = 0; k < GameState.BOARD_SIZE; k++) {
           horiz_row[k] = state.at(j,k,i);
           horiz_col[k] = state.at(k,j,i);
           vert_row[k] = state.at(i,j,k);
-          vert_col[k] = state.at(i,k,j);
         }
         sum += utilityForLine(horiz_row, player);
         sum += utilityForLine(horiz_col, player);
         sum += utilityForLine(vert_row, player);
-        sum += utilityForLine(vert_col, player);
       }
 
       // diagonals
@@ -25,18 +22,24 @@ class Evaluator {
       int[] horiz_diag2 = new int[GameState.BOARD_SIZE];
       int[] vert_diag1 = new int[GameState.BOARD_SIZE];
       int[] vert_diag2 = new int[GameState.BOARD_SIZE];
+      int[] z_diag1 = new int[GameState.BOARD_SIZE];
+      int[] z_diag2 = new int[GameState.BOARD_SIZE];
       int inset = 0;
       for (int j = 0; j < GameState.BOARD_SIZE; j++) {
         horiz_diag1[j] = state.at(j,inset,i);
         horiz_diag2[j] = state.at(j,GameState.BOARD_SIZE-1-inset,i);
         vert_diag1[j] = state.at(i,j,inset);
         vert_diag2[j] = state.at(i, j,GameState.BOARD_SIZE-1-inset);
+        z_diag1[j] = state.at(j,i,inset);
+        z_diag2[j] = state.at(j,i,GameState.BOARD_SIZE-1-inset);
         inset++;
       }
       sum += utilityForLine(horiz_diag1, player);
       sum += utilityForLine(horiz_diag2, player);
       sum += utilityForLine(vert_diag1, player);
       sum += utilityForLine(vert_diag2, player);
+      sum += utilityForLine(z_diag1, player);
+      sum += utilityForLine(z_diag2, player);
     }
 
     // superdiagonals
@@ -66,12 +69,24 @@ class Evaluator {
 
   private static int utilityForLine(int[] line, int player) {
     int opponent = player == Constants.CELL_X ? Constants.CELL_O : Constants.CELL_X;
+    int px = numberOfPlayerMarks(line, player);
+    int ox = numberOfPlayerMarks(line, opponent);
 
-    int diff = numberOfPlayerMarks(line, player) - numberOfPlayerMarks(line, opponent);
-    int sum = 0;
-    for (int i = 0; i < Math.abs(diff); i++)
-      sum += Math.pow(10,i);
-    return diff >= 0 ? sum : -sum;
+    int score = 0;
+    if (px == 0 && ox > 2)
+      return Integer.MIN_VALUE;
+    if (ox == 0 && px > 0)
+      return (int) Math.pow(10,px);
+    if (px == 0 && ox > 0)
+      return (int) -Math.pow(11,ox);
+    return score;
+//    int diff = numberOfPlayerMarks(line, player) - numberOfPlayerMarks(line, opponent);
+//    if (diff < -2)
+//      return Integer.MIN_VALUE;
+//    int sum = 0;
+//    for (int i = 0; i < Math.abs(diff); i++)
+//      sum += Math.pow(10,i);
+//    return diff >= 0 ? sum : -sum;
   }
 
   static int utilityForState(GameState state, int player) {
@@ -85,6 +100,8 @@ class Evaluator {
   }
 
   private static int eval(GameState state, int player) {
-    return sumLinesForPlayer(state, player);
+    int v = sumLinesForPlayer(state, player);
+    System.err.println("Number of lines: " + v);
+    return v;
   }
 }
